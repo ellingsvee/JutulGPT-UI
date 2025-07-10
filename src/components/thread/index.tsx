@@ -362,7 +362,7 @@ export function Thread() {
                     height={32}
                   />
                   <span className="text-xl font-semibold tracking-tight">
-                    Agent Chat
+                    JutulGPT Chat
                   </span>
                 </motion.button>
               </div>
@@ -435,7 +435,7 @@ export function Thread() {
                     <div className="flex items-center gap-3">
                       <LangGraphLogoSVG className="h-8 flex-shrink-0" />
                       <h1 className="text-2xl font-semibold tracking-tight">
-                        Agent Chat
+                        JutulGPT Chat
                       </h1>
                     </div>
                   )}
@@ -496,7 +496,7 @@ export function Thread() {
                             </Label>
                           </div>
                         </div>
-                        <Label
+                        {/* <Label
                           htmlFor="file-input"
                           className="flex cursor-pointer items-center gap-2"
                         >
@@ -504,7 +504,7 @@ export function Thread() {
                           <span className="text-sm text-gray-600">
                             Upload PDF or Image
                           </span>
-                        </Label>
+                        </Label> */}
                         <input
                           id="file-input"
                           type="file"
