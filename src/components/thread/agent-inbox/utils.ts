@@ -5,7 +5,8 @@ import { HumanResponseWithEdits, SubmitType } from "./types";
 import { HumanInterrupt } from "@langchain/langgraph/prebuilt";
 
 export function prettifyText(action: string) {
-  return startCase(action.replace(/_/g, " "));
+  // return startCase(action.replace(/_/g, " "));
+  return action;
 }
 
 export function isArrayOfMessages(
