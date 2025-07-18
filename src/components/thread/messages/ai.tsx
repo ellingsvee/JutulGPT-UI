@@ -85,8 +85,8 @@ function Interrupt({
           <ThreadView interrupt={interruptValue} />
         )}
       {interruptValue &&
-      !isAgentInboxInterruptSchema(interruptValue) &&
-      isLastMessage ? (
+        !isAgentInboxInterruptSchema(interruptValue) &&
+        isLastMessage ? (
         <GenericInterruptView interrupt={interruptValue} />
       ) : null}
     </>
