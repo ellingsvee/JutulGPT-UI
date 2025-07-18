@@ -131,14 +131,14 @@ export function ThreadActionsView({
       </div>
 
       <div className="flex w-full flex-row items-center justify-start gap-2">
-        <Button
+        {/* <Button
           variant="outline"
           className="border-gray-500 bg-white font-normal text-gray-800"
           onClick={handleResolve}
           disabled={actionsDisabled}
         >
           Mark as Resolved
-        </Button>
+        </Button> */}
         {ignoreAllowed && (
           <Button
             variant="outline"

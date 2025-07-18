@@ -12,9 +12,11 @@ import { Separator } from "@/components/ui/separator";
 function ResetButton({ handleReset }: { handleReset: () => void }) {
   return (
     <Button
-      onClick={handleReset}
       variant="ghost"
-      className="flex items-center justify-center gap-2 text-gray-500 hover:text-red-500"
+      className="invisible pointer-events-none flex items-center justify-center gap-2 text-gray-500"
+      tabIndex={-1}
+      aria-hidden="true"
+      disabled
     >
       <Undo2 className="h-4 w-4" />
       <span>Reset</span>
@@ -281,6 +283,24 @@ function EditAndOrAcceptComponent({
         const numRows =
           defaultRows.current[k as keyof typeof defaultRows.current] || 8;
 
+        // return (
+        //   <div
+        //     className="flex h-full w-full flex-col items-start gap-1 px-[1px]"
+        //     key={`allow-edit-args--${k}-${idx}`}
+        //   >
+        //     <div className="flex w-full flex-col items-start gap-[6px]">
+        //       <p className="min-w-fit text-sm font-medium">{prettifyText(k)}</p>
+        //       <Textarea
+        //         disabled={streaming}
+        //         className="h-full"
+        //         value={value}
+        //         onChange={(e) => onEditChange(e.target.value, editResponse, k)}
+        //         onKeyDown={handleKeyDown}
+        //         rows={numRows}
+        //       />
+        //     </div>
+        //   </div>
+        // );
         return (
           <div
             className="flex h-full w-full flex-col items-start gap-1 px-[1px]"
@@ -296,6 +316,10 @@ function EditAndOrAcceptComponent({
                 onKeyDown={handleKeyDown}
                 rows={numRows}
               />
+              {/* Markdown preview */}
+              <div className="w-full mt-2">
+                <MarkdownText>{value}</MarkdownText>
+              </div>
             </div>
           </div>
         );
@@ -405,13 +429,13 @@ export function InboxItemInput({
           args:
             Array.isArray(change) && Array.isArray(key)
               ? {
-                  ...response.args.args,
-                  ...Object.fromEntries(key.map((k, i) => [k, change[i]])),
-                }
+                ...response.args.args,
+                ...Object.fromEntries(key.map((k, i) => [k, change[i]])),
+              }
               : {
-                  ...response.args.args,
-                  [key as string]: change as string,
-                },
+                ...response.args.args,
+                [key as string]: change as string,
+              },
         },
       };
       if (
