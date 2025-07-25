@@ -496,21 +496,22 @@ export function Thread() {
                             </Label>
                           </div>
                         </div>
-                        {/* <Label
+                        <Label
                           htmlFor="file-input"
                           className="flex cursor-pointer items-center gap-2"
                         >
                           <Plus className="size-5 text-gray-600" />
                           <span className="text-sm text-gray-600">
-                            Upload PDF or Image
+                            Upload file
                           </span>
-                        </Label> */}
+                        </Label>
                         <input
                           id="file-input"
                           type="file"
                           onChange={handleFileUpload}
                           multiple
-                          accept="image/jpeg,image/png,image/gif,image/webp,application/pdf"
+                          // accept="image/jpeg,image/png,image/gif,image/webp,application/pdf,.txt,.py,.js,.ts,.jsx,.tsx,.json,.md,.markdown,.html,.css,.scss,.sass,.less,.xml,.yaml,.yml,.c,.cpp,.cc,.cxx,.h,.hpp,.java,.go,.rs,.rb,.php,.sh,.bash,.zsh,.fish,.sql,.r,.jl,.swift,.kt,.scala,.clj,.hs,.elm,.dart,.lua,.perl,.pl,.dockerfile,.gitignore,.env,.log,.cfg,.conf,.ini"
+                          accept=".txt,.py,.js,.ts,.jsx,.tsx,.json,.md,.markdown,.html,.css,.scss,.sass,.less,.xml,.yaml,.yml,.c,.cpp,.cc,.cxx,.h,.hpp,.java,.go,.rs,.rb,.php,.sh,.bash,.zsh,.fish,.sql,.r,.jl,.swift,.kt,.scala,.clj,.hs,.elm,.dart,.lua,.perl,.pl,.dockerfile,.gitignore,.env,.log,.cfg,.conf,.ini"
                           className="hidden"
                         />
                         {stream.isLoading ? (

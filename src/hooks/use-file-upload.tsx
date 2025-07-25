@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, ChangeEvent } from "react";
 import { toast } from "sonner";
 import type { Base64ContentBlock } from "@langchain/core/messages";
-import { fileToContentBlock } from "@/lib/multimodal-utils";
+import { fileToContentBlock, type ContentBlock } from "@/lib/multimodal-utils";
 
 export const SUPPORTED_FILE_TYPES = [
   "image/jpeg",
@@ -9,34 +9,84 @@ export const SUPPORTED_FILE_TYPES = [
   "image/gif",
   "image/webp",
   "application/pdf",
+  "text/plain",           // For .txt files
+  "application/json",     // For .json files
+  "text/x-python",        // For .py files
+  "text/x-c++src",        // For .cpp files
+  "text/x-csrc",          // For .c files
+  "text/x-java-source",   // For .java files
+  "text/markdown",        // For .md files
+  "text/x-julia",         // For .jl files
+  "",                     // Empty MIME type for unknown text files
+  "application/octet-stream", // Generic binary type often used for text files
+  // Add more as needed
 ];
 
+// Supported file extensions for text/code files
+export const SUPPORTED_TEXT_EXTENSIONS = [
+  '.txt', '.py', '.js', '.ts', '.jsx', '.tsx', '.json', '.md', '.markdown',
+  '.html', '.css', '.scss', '.sass', '.less', '.xml', '.yaml', '.yml',
+  '.c', '.cpp', '.cc', '.cxx', '.h', '.hpp', '.java', '.go', '.rs', '.rb',
+  '.php', '.sh', '.bash', '.zsh', '.fish', '.sql', '.r', '.jl', '.swift',
+  '.kt', '.scala', '.clj', '.hs', '.elm', '.dart', '.lua', '.perl', '.pl',
+  '.dockerfile', '.gitignore', '.env', '.log', '.cfg', '.conf', '.ini',
+];
+
+// Check if file is supported by MIME type or extension
+const isFileSupported = (file: File): boolean => {
+  // Check MIME type first
+  if (SUPPORTED_FILE_TYPES.includes(file.type)) {
+    return true;
+  }
+
+  // Check file extension for text files
+  const fileName = file.name.toLowerCase();
+  return SUPPORTED_TEXT_EXTENSIONS.some(ext => fileName.endsWith(ext));
+};
+
 interface UseFileUploadOptions {
-  initialBlocks?: Base64ContentBlock[];
+  initialBlocks?: ContentBlock[];
 }
 
 export function useFileUpload({
   initialBlocks = [],
 }: UseFileUploadOptions = {}) {
   const [contentBlocks, setContentBlocks] =
-    useState<Base64ContentBlock[]>(initialBlocks);
+    useState<ContentBlock[]>(initialBlocks);
   const dropRef = useRef<HTMLDivElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const dragCounter = useRef(0);
 
-  const isDuplicate = (file: File, blocks: Base64ContentBlock[]) => {
+  const isDuplicate = (file: File, blocks: ContentBlock[]) => {
+    // For text/code files, check if a text block with the same filename already exists
+    const fileName = file.name.toLowerCase();
+    if (SUPPORTED_TEXT_EXTENSIONS.some(ext => fileName.endsWith(ext))) {
+      return blocks.some(
+        (b) =>
+          b.type === "text" &&
+          b.text.startsWith(`File: ${file.name}\n\n`)
+      );
+    }
+
+    // PDF files
     if (file.type === "application/pdf") {
       return blocks.some(
         (b) =>
+          "mime_type" in b &&
           b.type === "file" &&
           b.mime_type === "application/pdf" &&
+          "metadata" in b &&
           b.metadata?.filename === file.name,
       );
     }
-    if (SUPPORTED_FILE_TYPES.includes(file.type)) {
+
+    // Images
+    if (file.type.startsWith("image/")) {
       return blocks.some(
         (b) =>
+          "mime_type" in b &&
           b.type === "image" &&
+          "metadata" in b &&
           b.metadata?.name === file.name &&
           b.mime_type === file.type,
       );
@@ -49,10 +99,10 @@ export function useFileUpload({
     if (!files) return;
     const fileArray = Array.from(files);
     const validFiles = fileArray.filter((file) =>
-      SUPPORTED_FILE_TYPES.includes(file.type),
+      isFileSupported(file),
     );
     const invalidFiles = fileArray.filter(
-      (file) => !SUPPORTED_FILE_TYPES.includes(file.type),
+      (file) => !isFileSupported(file),
     );
     const duplicateFiles = validFiles.filter((file) =>
       isDuplicate(file, contentBlocks),
@@ -63,7 +113,7 @@ export function useFileUpload({
 
     if (invalidFiles.length > 0) {
       toast.error(
-        "You have uploaded invalid file type. Please upload a JPEG, PNG, GIF, WEBP image or a PDF.",
+        "You have uploaded an invalid file type. Please upload an image, PDF, or supported text/code file (e.g. .txt, .json, .py, .md, etc.).",
       );
     }
     if (duplicateFiles.length > 0) {
@@ -109,10 +159,10 @@ export function useFileUpload({
 
       const files = Array.from(e.dataTransfer.files);
       const validFiles = files.filter((file) =>
-        SUPPORTED_FILE_TYPES.includes(file.type),
+        isFileSupported(file),
       );
       const invalidFiles = files.filter(
-        (file) => !SUPPORTED_FILE_TYPES.includes(file.type),
+        (file) => !isFileSupported(file),
       );
       const duplicateFiles = validFiles.filter((file) =>
         isDuplicate(file, contentBlocks),
@@ -123,7 +173,7 @@ export function useFileUpload({
 
       if (invalidFiles.length > 0) {
         toast.error(
-          "You have uploaded invalid file type. Please upload a JPEG, PNG, GIF, WEBP image or a PDF.",
+          "You have uploaded an invalid file type. Please upload an image, PDF, or supported text/code file (e.g. .txt, .json, .py, .md, etc.).",
         );
       }
       if (duplicateFiles.length > 0) {
@@ -215,24 +265,41 @@ export function useFileUpload({
     }
     e.preventDefault();
     const validFiles = files.filter((file) =>
-      SUPPORTED_FILE_TYPES.includes(file.type),
+      isFileSupported(file),
     );
     const invalidFiles = files.filter(
-      (file) => !SUPPORTED_FILE_TYPES.includes(file.type),
+      (file) => !isFileSupported(file),
     );
     const isDuplicate = (file: File) => {
+      // For text/code files, check if a text block with the same filename already exists
+      const fileName = file.name.toLowerCase();
+      if (SUPPORTED_TEXT_EXTENSIONS.some(ext => fileName.endsWith(ext))) {
+        return contentBlocks.some(
+          (b) =>
+            b.type === "text" &&
+            b.text.startsWith(`File: ${file.name}\n\n`)
+        );
+      }
+
+      // PDF files
       if (file.type === "application/pdf") {
         return contentBlocks.some(
           (b) =>
+            "mime_type" in b &&
             b.type === "file" &&
             b.mime_type === "application/pdf" &&
+            "metadata" in b &&
             b.metadata?.filename === file.name,
         );
       }
-      if (SUPPORTED_FILE_TYPES.includes(file.type)) {
+
+      // Images
+      if (file.type.startsWith("image/")) {
         return contentBlocks.some(
           (b) =>
+            "mime_type" in b &&
             b.type === "image" &&
+            "metadata" in b &&
             b.metadata?.name === file.name &&
             b.mime_type === file.type,
         );
@@ -243,7 +310,7 @@ export function useFileUpload({
     const uniqueFiles = validFiles.filter((file) => !isDuplicate(file));
     if (invalidFiles.length > 0) {
       toast.error(
-        "You have pasted an invalid file type. Please paste a JPEG, PNG, GIF, WEBP image or a PDF.",
+        "You have pasted an invalid file type. Please paste an image, PDF, or supported text/code file (e.g. .txt, .json, .py, .md, etc.).",
       );
     }
     if (duplicateFiles.length > 0) {
