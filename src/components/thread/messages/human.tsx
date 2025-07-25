@@ -88,7 +88,7 @@ export function HumanMessage({
           />
         ) : (
           <div className="flex flex-col gap-2">
-            {/* Render images and files if no text */}
+            {/* Render attachments (images, files, and text files) */}
             {Array.isArray(message.content) && message.content.length > 0 && (
               <div className="flex flex-wrap items-end justify-end gap-2">
                 {message.content.reduce<React.ReactNode[]>(
@@ -100,6 +100,17 @@ export function HumanMessage({
                           block={block}
                           size="md"
                         />,
+                      );
+                    } else if (block.type === "text" && block.text.startsWith("File: ")) {
+                      // Show text file attachments
+                      const filename = block.text.split('\n\n')[0].replace('File: ', '');
+                      acc.push(
+                        <div
+                          key={idx}
+                          className="inline-flex items-center gap-2 rounded-md bg-blue-100 px-3 py-2 text-sm"
+                        >
+                          <span className="max-w-32 truncate">{filename}</span>
+                        </div>
                       );
                     }
                     return acc;
