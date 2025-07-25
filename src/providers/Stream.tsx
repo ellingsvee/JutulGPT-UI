@@ -173,7 +173,7 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
               </h1>
             </div>
             <p className="text-muted-foreground">
-              Welcome to JutulGPT Chat! Before you get started, you need to enter
+              Welcome to JutulGPT! Before you get started, you need to enter
               the URL of the deployment and the assistant / graph ID.
             </p>
           </div>
