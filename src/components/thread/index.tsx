@@ -38,6 +38,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../ui/tooltip";
+import { RunnableConfigPanel } from "../config/runnable-config-panel";
 import { useFileUpload } from "@/hooks/use-file-upload";
 import { ContentBlocksPreview } from "./ContentBlocksPreview";
 import {
@@ -94,7 +95,7 @@ function OpenGitHubRepo() {
       <Tooltip>
         <TooltipTrigger asChild>
           <a
-            href="https://github.com/langchain-ai/agent-chat-ui"
+            href="https://github.com/ellingsvee/JutulGPT-UI"
             target="_blank"
             className="flex items-center justify-center"
           >
@@ -137,6 +138,7 @@ export function Thread() {
     handlePaste,
   } = useFileUpload();
   const [firstTokenReceived, setFirstTokenReceived] = useState(false);
+  const [configPanelOpen, setConfigPanelOpen] = useState(false);
   const isLargeScreen = useMediaQuery("(min-width: 1024px)");
 
   const stream = useStreamContext();
@@ -219,6 +221,7 @@ export function Thread() {
       { messages: [...toolMessages, newHumanMessage], context },
       {
         streamMode: ["values"],
+        config: stream.runnableConfig,
         optimisticValues: (prev) => ({
           ...prev,
           context,
@@ -244,6 +247,7 @@ export function Thread() {
     stream.submit(undefined, {
       checkpoint: parentCheckpoint,
       streamMode: ["values"],
+      config: stream.runnableConfig,
     });
   };
 
@@ -322,7 +326,13 @@ export function Thread() {
                   </Button>
                 )}
               </div>
-              <div className="absolute top-2 right-4 flex items-center">
+              <div className="absolute top-2 right-4 flex items-center gap-2">
+                <RunnableConfigPanel
+                  config={stream.runnableConfig}
+                  onConfigChange={stream.setRunnableConfig}
+                  isOpen={configPanelOpen}
+                  onToggle={() => setConfigPanelOpen(!configPanelOpen)}
+                />
                 <OpenGitHubRepo />
               </div>
             </div>
@@ -371,6 +381,12 @@ export function Thread() {
                 <div className="flex items-center">
                   <OpenGitHubRepo />
                 </div>
+                <RunnableConfigPanel
+                  config={stream.runnableConfig}
+                  onConfigChange={stream.setRunnableConfig}
+                  isOpen={configPanelOpen}
+                  onToggle={() => setConfigPanelOpen(!configPanelOpen)}
+                />
                 <TooltipIconButton
                   size="lg"
                   className="p-4"

@@ -24,6 +24,7 @@ import { PasswordInput } from "@/components/ui/password-input";
 import { getApiKey } from "@/lib/api-key";
 import { useThreads } from "./Thread";
 import { toast } from "sonner";
+import { RunnableConfig } from "@/components/config/runnable-config-panel";
 
 export type StateType = { messages: Message[]; ui?: UIMessage[] };
 
@@ -39,7 +40,10 @@ const useTypedStream = useStream<
   }
 >;
 
-type StreamContextType = ReturnType<typeof useTypedStream>;
+type StreamContextType = ReturnType<typeof useTypedStream> & {
+  runnableConfig: RunnableConfig;
+  setRunnableConfig: (config: RunnableConfig) => void;
+};
 const StreamContext = createContext<StreamContextType | undefined>(undefined);
 
 async function sleep(ms = 4000) {
@@ -78,7 +82,14 @@ const StreamSession = ({
   assistantId: string;
 }) => {
   const [threadId, setThreadId] = useQueryState("threadId");
+  const [runnableConfig, setRunnableConfig] = useState<RunnableConfig>({
+    tags: [],
+    metadata: {},
+    recursion_limit: 25,
+    configurable: {},
+  });
   const { getThreads, setThreads } = useThreads();
+
   const streamValue = useTypedStream({
     apiUrl,
     apiKey: apiKey ?? undefined,
@@ -100,6 +111,12 @@ const StreamSession = ({
     },
   });
 
+  const extendedStreamValue = {
+    ...streamValue,
+    runnableConfig,
+    setRunnableConfig,
+  };
+
   useEffect(() => {
     checkGraphStatus(apiUrl, apiKey).then((ok) => {
       if (!ok) {
@@ -119,7 +136,7 @@ const StreamSession = ({
   }, [apiKey, apiUrl]);
 
   return (
-    <StreamContext.Provider value={streamValue}>
+    <StreamContext.Provider value={extendedStreamValue}>
       {children}
     </StreamContext.Provider>
   );
