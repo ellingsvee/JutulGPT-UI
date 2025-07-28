@@ -21,7 +21,6 @@ export interface RunnableConfig {
         max_iterations?: number;
         human_interaction?: boolean;
         allow_package_installation?: boolean;
-        n_retrieve?: number;
         embedding_model?: string;
         retriever_provider?: "faiss" | "chroma";
         search_type?: "similarity" | "mmr" | "similarity_score_threshold";
@@ -82,69 +81,6 @@ export function RunnableConfigPanel({
     const handleApplyConfig = () => {
         onConfigChange(localConfig);
         onToggle(); // Close the modal
-    };
-
-    const addTag = () => {
-        if (newTag.trim() && !localConfig.tags?.includes(newTag.trim())) {
-            setLocalConfig({
-                ...localConfig,
-                tags: [...(localConfig.tags || []), newTag.trim()],
-            });
-            setNewTag("");
-        }
-    };
-
-    const removeTag = (tagToRemove: string) => {
-        setLocalConfig({
-            ...localConfig,
-            tags: localConfig.tags?.filter(tag => tag !== tagToRemove) || [],
-        });
-    };
-
-    const addMetadata = () => {
-        if (newMetadataKey.trim() && newMetadataValue.trim()) {
-            setLocalConfig({
-                ...localConfig,
-                metadata: {
-                    ...localConfig.metadata,
-                    [newMetadataKey.trim()]: newMetadataValue.trim(),
-                },
-            });
-            setNewMetadataKey("");
-            setNewMetadataValue("");
-        }
-    };
-
-    const removeMetadata = (key: string) => {
-        const newMetadata = { ...localConfig.metadata };
-        delete newMetadata[key];
-        setLocalConfig({
-            ...localConfig,
-            metadata: newMetadata,
-        });
-    };
-
-    const addConfigurable = () => {
-        if (newConfigurableKey.trim() && newConfigurableValue.trim()) {
-            setLocalConfig({
-                ...localConfig,
-                configurable: {
-                    ...localConfig.configurable,
-                    [newConfigurableKey.trim()]: newConfigurableValue.trim(),
-                },
-            });
-            setNewConfigurableKey("");
-            setNewConfigurableValue("");
-        }
-    };
-
-    const removeConfigurable = (key: string) => {
-        const newConfigurable = { ...localConfig.configurable };
-        delete newConfigurable[key];
-        setLocalConfig({
-            ...localConfig,
-            configurable: newConfigurable,
-        });
     };
 
     return (
@@ -239,8 +175,8 @@ export function RunnableConfigPanel({
                                     >
                                         {(localConfig.configurable?.use_local_model ?? false) ? (
                                             <>
-                                                <option value="ollama/qwen3:14b">Ollama Qwen3 14B</option>
-                                                <option value="ollama/llama3-groq-tool-use:8b">Ollama Llama3 Groq Tool Use 8B</option>
+                                                <option value="ollama/qwen3:14b">Qwen3 14B</option>
+                                                <option value="ollama/llama3-groq-tool-use:8b">Llama3 Groq Tool Use 8B</option>
                                             </>
                                         ) : (
                                             <>
@@ -272,7 +208,7 @@ export function RunnableConfigPanel({
                                     >
                                         {(localConfig.configurable?.use_local_model ?? false) ? (
                                             <>
-                                                <option value="ollama/nomic-embed-text">Ollama Nomic Embed Text</option>
+                                                <option value="ollama/nomic-embed-text">Nomic Embed Text</option>
                                             </>
                                         ) : (
                                             <>
@@ -308,6 +244,28 @@ export function RunnableConfigPanel({
                                     />
                                 </div> */}
 
+                                {/* Human Interaction */}
+                                <div className="flex items-center justify-between mt-4">
+                                    <div className="space-y-0.5">
+                                        <Label className="text-sm font-medium">Human Interaction</Label>
+                                        <p className="text-xs text-muted-foreground">
+                                            Enable human-in-the-loop interaction to confirm and modify actions.
+                                        </p>
+                                    </div>
+                                    <Switch
+                                        checked={localConfig.configurable?.human_interaction ?? true}
+                                        onCheckedChange={(checked) =>
+                                            setLocalConfig({
+                                                ...localConfig,
+                                                configurable: {
+                                                    ...localConfig.configurable,
+                                                    human_interaction: checked,
+                                                },
+                                            })
+                                        }
+                                    />
+                                </div>
+
                                 {/* Max Iterations */}
                                 <div className="mt-4">
                                     <Label className="text-sm font-medium">Max Iterations</Label>
@@ -333,34 +291,12 @@ export function RunnableConfigPanel({
                                     />
                                 </div>
 
-                                {/* Human Interaction */}
-                                <div className="flex items-center justify-between mt-4">
-                                    <div className="space-y-0.5">
-                                        <Label className="text-sm font-medium">Human Interaction</Label>
-                                        <p className="text-xs text-muted-foreground">
-                                            Enable human-in-the-loop. Set to True when running the UI.
-                                        </p>
-                                    </div>
-                                    <Switch
-                                        checked={localConfig.configurable?.human_interaction ?? true}
-                                        onCheckedChange={(checked) =>
-                                            setLocalConfig({
-                                                ...localConfig,
-                                                configurable: {
-                                                    ...localConfig.configurable,
-                                                    human_interaction: checked,
-                                                },
-                                            })
-                                        }
-                                    />
-                                </div>
-
                                 {/* Allow Package Installation */}
                                 <div className="flex items-center justify-between mt-4">
                                     <div className="space-y-0.5">
                                         <Label className="text-sm font-medium">Allow Package Installation</Label>
                                         <p className="text-xs text-muted-foreground">
-                                            Allow the agent to install packages. Set to False to prevent this.
+                                            Allow the agent to install packages.
                                         </p>
                                     </div>
                                     <Switch
@@ -374,31 +310,6 @@ export function RunnableConfigPanel({
                                                 },
                                             })
                                         }
-                                    />
-                                </div>
-
-                                {/* Number of Documents to Retrieve */}
-                                <div className="mt-4">
-                                    <Label className="text-sm font-medium">Number of Documents to Retrieve</Label>
-                                    <p className="text-xs text-muted-foreground mb-2">
-                                        Number of documents to retrieve in RAG.
-                                    </p>
-                                    <Input
-                                        type="number"
-                                        value={localConfig.configurable?.n_retrieve || 4}
-                                        onChange={(e) =>
-                                            setLocalConfig({
-                                                ...localConfig,
-                                                configurable: {
-                                                    ...localConfig.configurable,
-                                                    n_retrieve: e.target.value ? parseInt(e.target.value) : 4,
-                                                },
-                                            })
-                                        }
-                                        placeholder="4"
-                                        className="mt-1"
-                                        min="1"
-                                        max="20"
                                     />
                                 </div>
 
@@ -434,15 +345,33 @@ export function RunnableConfigPanel({
                                     </p>
                                     <select
                                         value={localConfig.configurable?.search_type || "mmr"}
-                                        onChange={(e) =>
+                                        onChange={(e) => {
+                                            const searchType = e.target.value as "similarity" | "mmr" | "similarity_score_threshold";
+                                            // Update search_kwargs based on the selected search type
+                                            let defaultKwargs;
+                                            switch (searchType) {
+                                                case "similarity":
+                                                    defaultKwargs = { k: 4 };
+                                                    break;
+                                                case "mmr":
+                                                    defaultKwargs = { k: 4, fetch_k: 15, lambda_mult: 0.5 };
+                                                    break;
+                                                case "similarity_score_threshold":
+                                                    defaultKwargs = { score_threshold: 0.5 };
+                                                    break;
+                                                default:
+                                                    defaultKwargs = { k: 4 };
+                                            }
+
                                             setLocalConfig({
                                                 ...localConfig,
                                                 configurable: {
                                                     ...localConfig.configurable,
-                                                    search_type: e.target.value as "similarity" | "mmr" | "similarity_score_threshold",
+                                                    search_type: searchType,
+                                                    search_kwargs: defaultKwargs,
                                                 },
-                                            })
-                                        }
+                                            });
+                                        }}
                                         className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                                     >
                                         <option value="similarity">Similarity</option>
@@ -453,12 +382,46 @@ export function RunnableConfigPanel({
 
                                 {/* Search Kwargs */}
                                 <div className="mt-4">
-                                    <Label className="text-sm font-medium">Search Parameters (JSON)</Label>
+                                    <Label className="text-sm font-medium">
+                                        Search Parameters (JSON){" "}
+                                        <a
+                                            href="https://python.langchain.com/api_reference/chroma/vectorstores/langchain_chroma.vectorstores.Chroma.html#langchain_chroma.vectorstores.Chroma.as_retriever"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-blue-500 hover:text-blue-700 underline text-s"
+                                        >
+                                            (docs)
+                                        </a>
+                                    </Label>
                                     <p className="text-xs text-muted-foreground mb-2">
-                                        Additional keyword arguments to pass to the search function of the retriever.
+                                        {(() => {
+                                            const searchType = localConfig.configurable?.search_type || "mmr";
+                                            switch (searchType) {
+                                                case "similarity":
+                                                    return "Parameters for similarity search.";
+                                                case "mmr":
+                                                    return "Parameters for MMR search.";
+                                                case "similarity_score_threshold":
+                                                    return "Parameters for score threshold search.";
+                                                default:
+                                                    return "Additional keyword arguments to pass to the search function of the retriever.";
+                                            }
+                                        })()}
                                     </p>
                                     <Textarea
-                                        value={JSON.stringify(localConfig.configurable?.search_kwargs || { fetch_k: 15 }, null, 2)}
+                                        value={JSON.stringify(localConfig.configurable?.search_kwargs || (() => {
+                                            const searchType = localConfig.configurable?.search_type || "mmr";
+                                            switch (searchType) {
+                                                case "similarity":
+                                                    return { k: 4 };
+                                                case "mmr":
+                                                    return { k: 4, fetch_k: 15, lambda_mult: 0.5 };
+                                                case "similarity_score_threshold":
+                                                    return { score_threshold: 0.5 };
+                                                default:
+                                                    return { k: 4 };
+                                            }
+                                        })(), null, 2)}
                                         onChange={(e) => {
                                             try {
                                                 const parsed = JSON.parse(e.target.value);
@@ -473,7 +436,19 @@ export function RunnableConfigPanel({
                                                 // Invalid JSON, don't update
                                             }
                                         }}
-                                        placeholder='{"fetch_k": 15}'
+                                        placeholder={(() => {
+                                            const searchType = localConfig.configurable?.search_type || "mmr";
+                                            switch (searchType) {
+                                                case "similarity":
+                                                    return '{"k": 4}';
+                                                case "mmr":
+                                                    return '{"k": 4, "fetch_k": 15, "lambda_mult": 0.5}';
+                                                case "similarity_score_threshold":
+                                                    return '{"score_threshold": 0.5}';
+                                                default:
+                                                    return '{"k": 4 }';
+                                            }
+                                        })()}
                                         className="mt-1 font-mono text-sm"
                                         rows={3}
                                     />
@@ -487,15 +462,30 @@ export function RunnableConfigPanel({
                                     </p>
                                     <select
                                         value={localConfig.configurable?.rerank_provider || "None"}
-                                        onChange={(e) =>
+                                        onChange={(e) => {
+                                            const rerankProvider = e.target.value as "None" | "flash";
+                                            // Update rerank_kwargs based on the selected rerank provider
+                                            let defaultKwargs;
+                                            switch (rerankProvider) {
+                                                case "None":
+                                                    defaultKwargs = {};
+                                                    break;
+                                                case "flash":
+                                                    defaultKwargs = { top_n: 3, score_threshold: 0.75 };
+                                                    break;
+                                                default:
+                                                    defaultKwargs = {};
+                                            }
+
                                             setLocalConfig({
                                                 ...localConfig,
                                                 configurable: {
                                                     ...localConfig.configurable,
-                                                    rerank_provider: e.target.value as "None" | "flash",
+                                                    rerank_provider: rerankProvider,
+                                                    rerank_kwargs: defaultKwargs,
                                                 },
-                                            })
-                                        }
+                                            });
+                                        }}
                                         className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                                     >
                                         <option value="None">None</option>
@@ -507,10 +497,30 @@ export function RunnableConfigPanel({
                                 <div className="mt-4">
                                     <Label className="text-sm font-medium">Rerank Parameters (JSON)</Label>
                                     <p className="text-xs text-muted-foreground mb-2">
-                                        Keyword arguments provided to the reranker.
+                                        {(() => {
+                                            const rerankProvider = localConfig.configurable?.rerank_provider || "None";
+                                            switch (rerankProvider) {
+                                                case "None":
+                                                    return "No parameters available when reranking is disabled.";
+                                                case "flash":
+                                                    return "Parameters for Flash reranker.";
+                                                default:
+                                                    return "Keyword arguments provided to the reranker.";
+                                            }
+                                        })()}
                                     </p>
                                     <Textarea
-                                        value={JSON.stringify(localConfig.configurable?.rerank_kwargs || { top_n: 3, score_threshold: 0.75 }, null, 2)}
+                                        value={JSON.stringify(localConfig.configurable?.rerank_kwargs || (() => {
+                                            const rerankProvider = localConfig.configurable?.rerank_provider || "None";
+                                            switch (rerankProvider) {
+                                                case "None":
+                                                    return {};
+                                                case "flash":
+                                                    return { top_n: 3, score_threshold: 0.75 };
+                                                default:
+                                                    return {};
+                                            }
+                                        })(), null, 2)}
                                         onChange={(e) => {
                                             try {
                                                 const parsed = JSON.parse(e.target.value);
@@ -525,13 +535,24 @@ export function RunnableConfigPanel({
                                                 // Invalid JSON, don't update
                                             }
                                         }}
-                                        placeholder='{"top_n": 3, "score_threshold": 0.75}'
-                                        className="mt-1 font-mono text-sm"
+                                        placeholder={(() => {
+                                            const rerankProvider = localConfig.configurable?.rerank_provider || "None";
+                                            switch (rerankProvider) {
+                                                case "None":
+                                                    return '{}';
+                                                case "flash":
+                                                    return '{"top_n": 3, "score_threshold": 0.75}';
+                                                default:
+                                                    return '{}';
+                                            }
+                                        })()}
+                                        disabled={(localConfig.configurable?.rerank_provider || "None") === "None"}
+                                        className={`mt-1 font-mono text-sm ${(localConfig.configurable?.rerank_provider || "None") === "None" ? "opacity-50 cursor-not-allowed" : ""}`}
                                         rows={3}
                                     />
                                 </div>
 
-                                {/* Default Coder Prompt */}
+                                {/* Default Coder Prompt
                                 <div className="mt-4">
                                     <Label className="text-sm font-medium">Default Coder Prompt</Label>
                                     <p className="text-xs text-muted-foreground mb-2">
@@ -552,52 +573,9 @@ export function RunnableConfigPanel({
                                         className="mt-1"
                                         rows={4}
                                     />
-                                </div>
+                                </div> */}
                             </div>
 
-                            <Separator />
-
-                            {/* Custom Configurable Parameters */}
-                            <div>
-                                <Label className="text-sm font-medium">Custom Parameters</Label>
-                                <div className="mt-2 space-y-2">
-                                    {Object.entries(localConfig.configurable || {})
-                                        .filter(([key]) => !['use_local_model', 'retrieve_fimbul', 'max_iterations', 'human_interaction', 'allow_package_installation', 'n_retrieve', 'response_model', 'embedding_model', 'retriever_provider', 'search_type', 'search_kwargs', 'rerank_provider', 'rerank_kwargs', 'default_coder_prompt'].includes(key))
-                                        .map(([key, value]) => (
-                                            <div key={key} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
-                                                <span className="font-mono text-sm flex-1">
-                                                    {key}: {JSON.stringify(value)}
-                                                </span>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => removeConfigurable(key)}
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </div>
-                                        ))}
-                                    <div className="flex gap-2">
-                                        <Input
-                                            placeholder="Key"
-                                            value={newConfigurableKey}
-                                            onChange={(e) => setNewConfigurableKey(e.target.value)}
-                                            className="flex-1"
-                                        />
-                                        <Input
-                                            placeholder="Value"
-                                            value={newConfigurableValue}
-                                            onChange={(e) => setNewConfigurableValue(e.target.value)}
-                                            className="flex-1"
-                                        />
-                                        <Button variant="outline" size="sm" onClick={addConfigurable}>
-                                            <Plus className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <Separator />
                         </CardContent>
                     </Card>
                 </div>
