@@ -291,28 +291,6 @@ export function RunnableConfigPanel({
                                     />
                                 </div>
 
-                                {/* Allow Package Installation */}
-                                <div className="flex items-center justify-between mt-4">
-                                    <div className="space-y-0.5">
-                                        <Label className="text-sm font-medium">Allow Package Installation</Label>
-                                        <p className="text-xs text-muted-foreground">
-                                            Allow the agent to install packages.
-                                        </p>
-                                    </div>
-                                    <Switch
-                                        checked={localConfig.configurable?.allow_package_installation ?? false}
-                                        onCheckedChange={(checked) =>
-                                            setLocalConfig({
-                                                ...localConfig,
-                                                configurable: {
-                                                    ...localConfig.configurable,
-                                                    allow_package_installation: checked,
-                                                },
-                                            })
-                                        }
-                                    />
-                                </div>
-
                                 {/* Retriever Provider */}
                                 <div className="mt-4">
                                     <Label className="text-sm font-medium">Retriever Provider</Label>
